@@ -1,0 +1,159 @@
+{% extends 'base/base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ title }} - Blog Site{% endblock %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h3 class="mb-0">
+                        <i class="fas fa-{% if blog %}edit{% else %}plus{% endif %} me-2"></i>{{ title }}
+                    </h3>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% crispy form %}
+                    </form>
+                </div>
+            </div>
+
+            <!-- Writing Tips -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb text-warning me-2"></i>Writing Tips
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-heading me-2"></i>Title</h6>
+                            <ul class="small text-muted">
+                                <li>Keep it concise and descriptive</li>
+                                <li>Use keywords your audience would search for</li>
+                                <li>Make it engaging and clickable</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-paragraph me-2"></i>Content</h6>
+                            <ul class="small text-muted">
+                                <li>Start with a compelling introduction</li>
+                                <li>Use headings to structure your content</li>
+                                <li>Include examples and practical tips</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-image me-2"></i>Featured Image</h6>
+                            <ul class="small text-muted">
+                                <li>Use high-quality, relevant images</li>
+                                <li>Recommended size: 1200x630 pixels</li>
+                                <li>Ensure you have rights to use the image</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-tags me-2"></i>Category</h6>
+                            <ul class="small text-muted">
+                                <li>Choose the most relevant category</li>
+                                <li>This helps readers find your content</li>
+                                <li>Contact admin to add new categories</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Section -->
+            {% if blog %}
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-eye me-2"></i>Quick Actions
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex gap-2">
+                        <a href="{{ blog.get_absolute_url }}" class="btn btn-outline-primary">
+                            <i class="fas fa-eye me-1"></i>View Blog
+                        </a>
+                        <a href="{% url 'blog:my_blogs' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-list me-1"></i>My Blogs
+                        </a>
+                        {% if blog.status == 'draft' %}
+                        <span class="badge bg-warning text-dark fs-6 align-self-center">Draft</span>
+                        {% else %}
+                        <span class="badge bg-success fs-6 align-self-center">Published</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Auto-save functionality (optional)
+    let autoSaveTimer;
+    
+    $('#id_title, #id_body, #id_excerpt').on('input', function() {
+        clearTimeout(autoSaveTimer);
+        autoSaveTimer = setTimeout(function() {
+            // You can implement auto-save functionality here
+            console.log('Auto-save triggered');
+        }, 5000);
+    });
+    
+    // Character counter for excerpt
+    const excerptField = $('#id_excerpt');
+    const maxLength = 300;
+    
+    if (excerptField.length) {
+        const counter = $('<small class="text-muted form-text"></small>');
+        excerptField.after(counter);
+        
+        function updateCounter() {
+            const remaining = maxLength - excerptField.val().length;
+            counter.text(`${remaining} characters remaining`);
+            
+            if (remaining < 0) {
+                counter.removeClass('text-muted').addClass('text-danger');
+            } else if (remaining < 50) {
+                counter.removeClass('text-muted text-danger').addClass('text-warning');
+            } else {
+                counter.removeClass('text-warning text-danger').addClass('text-muted');
+            }
+        }
+        
+        excerptField.on('input', updateCounter);
+        updateCounter();
+    }
+    
+    // Preview image on upload
+    $('#id_featured_image').on('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let preview = $('#image-preview');
+                if (!preview.length) {
+                    preview = $('<div id="image-preview" class="mt-2"><img class="img-thumbnail" style="max-width: 200px;"></div>');
+                    $('#id_featured_image').after(preview);
+                }
+                preview.find('img').attr('src', e.target.result);
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+});
+</script>
+{% endblock %}
+{% endblock %}
+
